@@ -65,9 +65,24 @@ function Login() {
                     data.message || "Login successful!"
                 );
 
-                // Redirect to Dashboard
+                // Redirect based on user role
                 setTimeout(() => {
-                    window.location.href = "/dashboard";
+
+                    const role = data.role?.toUpperCase();
+
+                    if (role === "EMPLOYEE") {
+                        window.location.href = "/employee";
+                    }
+                    else if (role === "ADMIN") {
+                        window.location.href = "/admin";
+                    }
+                    else if (role === "CITIZEN") {
+                        window.location.href = "/dashboard";
+                    }
+                    else {
+                        window.location.href = "/dashboard";
+                    }
+
                 }, 500);
 
             } else {
