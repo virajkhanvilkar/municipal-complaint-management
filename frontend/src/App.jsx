@@ -5,7 +5,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 // Admin
-import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageComplaints from "./pages/admin/ManageComplaints";
+import ManageUsers from "./pages/admin/ManageUsers";
+import AdminProfile from "./pages/admin/Profile";
 
 // Citizen
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
@@ -26,16 +29,47 @@ function App() {
 
                 {/* ================= AUTH ================= */}
 
-                <Route path="/" element={<Login />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route
+                    path="/"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<Register />}
+                />
 
 
                 {/* ================= ADMIN ================= */}
 
                 <Route
                     path="/admin"
-                    element={<Dashboard />}
+                    element={<AdminDashboard />}
+                />
+
+                <Route
+                    path="/admin/dashboard"
+                    element={<AdminDashboard />}
+                />
+
+                <Route
+                    path="/admin/complaints"
+                    element={<ManageComplaints />}
+                />
+
+                <Route
+                    path="/admin/users"
+                    element={<ManageUsers />}
+                />
+
+                <Route
+                    path="/admin/profile"
+                    element={<AdminProfile />}
                 />
 
 
