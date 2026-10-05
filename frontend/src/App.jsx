@@ -3,6 +3,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // Authentication
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Unauthorized from "./pages/Unauthorized";
+
+// Route Security
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -44,32 +48,57 @@ function App() {
                     element={<Register />}
                 />
 
+                <Route
+                    path="/unauthorized"
+                    element={<Unauthorized />}
+                />
+
 
                 {/* ================= ADMIN ================= */}
 
                 <Route
                     path="/admin"
-                    element={<AdminDashboard />}
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/admin/dashboard"
-                    element={<AdminDashboard />}
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/admin/complaints"
-                    element={<ManageComplaints />}
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <ManageComplaints />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/admin/users"
-                    element={<ManageUsers />}
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <ManageUsers />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/admin/profile"
-                    element={<AdminProfile />}
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <AdminProfile />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -77,22 +106,38 @@ function App() {
 
                 <Route
                     path="/dashboard"
-                    element={<CitizenDashboard />}
+                    element={
+                        <ProtectedRoute allowedRoles={["CITIZEN"]}>
+                            <CitizenDashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/citizen/create-complaint"
-                    element={<CreateComplaint />}
+                    element={
+                        <ProtectedRoute allowedRoles={["CITIZEN"]}>
+                            <CreateComplaint />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/citizen/my-complaints"
-                    element={<MyComplaints />}
+                    element={
+                        <ProtectedRoute allowedRoles={["CITIZEN"]}>
+                            <MyComplaints />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/citizen/profile"
-                    element={<CitizenProfile />}
+                    element={
+                        <ProtectedRoute allowedRoles={["CITIZEN"]}>
+                            <CitizenProfile />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -100,22 +145,38 @@ function App() {
 
                 <Route
                     path="/employee"
-                    element={<EmployeeDashboard />}
+                    element={
+                        <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
+                            <EmployeeDashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/employee/complaints"
-                    element={<AssignedComplaints />}
+                    element={
+                        <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
+                            <AssignedComplaints />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/employee/update-complaint"
-                    element={<UpdateComplaint />}
+                    element={
+                        <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
+                            <UpdateComplaint />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/employee/profile"
-                    element={<EmployeeProfile />}
+                    element={
+                        <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
+                            <EmployeeProfile />
+                        </ProtectedRoute>
+                    }
                 />
 
             </Routes>
