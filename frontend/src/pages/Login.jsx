@@ -55,32 +55,53 @@ function Login() {
 
                 console.log("Logged-in user:", data);
 
-                // Save user information
+                // Get role from backend
+                const role = data.role?.toUpperCase();
+
+                console.log("User role:", role);
+
+                // Check whether valid role exists
+                if (
+                    role !== "ADMIN" &&
+                    role !== "EMPLOYEE" &&
+                    role !== "CITIZEN"
+                ) {
+                    setError("Invalid user role. Please contact administrator.");
+                    return;
+                }
+
+                // Save user information with normalized role
+                const userData = {
+                    ...data,
+                    role: role
+                };
+
                 localStorage.setItem(
                     "user",
-                    JSON.stringify(data)
+                    JSON.stringify(userData)
                 );
 
                 setMessage(
                     data.message || "Login successful!"
                 );
 
-                // Redirect based on user role
+                // Redirect based on role
                 setTimeout(() => {
 
-                    const role = data.role?.toUpperCase();
-
                     if (role === "EMPLOYEE") {
+
                         window.location.href = "/employee";
+
                     }
                     else if (role === "ADMIN") {
+
                         window.location.href = "/admin";
+
                     }
                     else if (role === "CITIZEN") {
+
                         window.location.href = "/dashboard";
-                    }
-                    else {
-                        window.location.href = "/dashboard";
+
                     }
 
                 }, 500);
