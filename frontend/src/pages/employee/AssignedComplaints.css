@@ -1,0 +1,248 @@
+.assigned-page {
+  min-height: 100vh;
+  padding: 32px;
+  background: #eef4ff;
+  box-sizing: border-box;
+}
+
+.assigned-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.assigned-header h1 {
+  margin: 0;
+  color: #12345b;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.assigned-header p {
+  margin: 8px 0 0;
+  color: #718096;
+  font-size: 15px;
+}
+
+.complaint-count {
+  min-width: 100px;
+  padding: 14px 20px;
+  background: white;
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 3px 12px rgba(20, 100, 217, 0.08);
+}
+
+.complaint-count span {
+  display: block;
+  color: #1464d9;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.complaint-count small {
+  color: #718096;
+  font-size: 12px;
+}
+
+.complaints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 22px;
+}
+
+.complaint-card {
+  background: white;
+  border: 1px solid #dce8f8;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 5px 18px rgba(20, 100, 217, 0.08);
+  transition: 0.2s ease;
+}
+
+.complaint-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 100, 217, 0.13);
+}
+
+.complaint-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.complaint-label {
+  color: #8a9bb0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.complaint-card-header h2 {
+  margin: 5px 0 0;
+  color: #12345b;
+  font-size: 22px;
+}
+
+.status-badge {
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.status-pending {
+  background: #fff4d6;
+  color: #a66a00;
+}
+
+.status-progress {
+  background: #e4efff;
+  color: #1464d9;
+}
+
+.status-resolved {
+  background: #e2f7eb;
+  color: #16834b;
+}
+
+.complaint-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.detail-box {
+  background: #f7faff;
+  border: 1px solid #e6eef9;
+  border-radius: 10px;
+  padding: 13px;
+}
+
+.detail-box span,
+.description-section > span,
+.citizen-details span,
+.remarks-section > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8a9bb0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detail-box strong {
+  color: #243b53;
+  font-size: 14px;
+}
+
+.description-section {
+  margin-top: 20px;
+}
+
+.description-section p,
+.remarks-section p {
+  margin: 0;
+  color: #52667a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.citizen-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #edf2f7;
+}
+
+.citizen-title {
+  margin-bottom: 14px;
+  color: #12345b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.citizen-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.citizen-details strong {
+  color: #243b53;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.remarks-section {
+  margin-top: 18px;
+  padding: 13px;
+  background: #f7faff;
+  border-left: 3px solid #1464d9;
+  border-radius: 6px;
+}
+
+.assigned-loading,
+.assigned-error,
+.empty-complaints {
+  padding: 50px;
+  background: white;
+  border-radius: 16px;
+  text-align: center;
+  color: #52667a;
+  box-shadow: 0 5px 18px rgba(20, 100, 217, 0.08);
+}
+
+.assigned-error {
+  color: #c53030;
+}
+
+.empty-icon {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  background: #e2f7eb;
+  color: #16834b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.empty-complaints h2 {
+  margin: 0 0 8px;
+  color: #12345b;
+}
+
+.empty-complaints p {
+  margin: 0;
+  color: #718096;
+}
+
+@media (max-width: 700px) {
+  .assigned-page {
+    padding: 20px;
+  }
+
+  .assigned-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .complaints-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .complaint-details,
+  .citizen-details {
+    grid-template-columns: 1fr;
+  }
+}
