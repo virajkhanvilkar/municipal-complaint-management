@@ -1,5 +1,6 @@
 package com.municipal.complaint_management.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -14,6 +15,7 @@ public class User {
 
     private String email;
 
+    @JsonIgnore
     private String password;
 
     private String phone;
@@ -55,6 +57,7 @@ public class User {
     }
 
     // Get Password
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
