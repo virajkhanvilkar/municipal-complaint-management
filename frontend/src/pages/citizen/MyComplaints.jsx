@@ -1,296 +1,772 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./citizen.css";
 
 function MyComplaints() {
+
     const navigate = useNavigate();
 
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
+    const [complaints, setComplaints] = useState([]);
+
+    const [loading, setLoading] = useState(() => !user?.id);
+
+    const [error, setError] = useState(() =>
+        !user?.id
+            ? "Citizen information not found. Please login again."
+            : ""
+    );
+
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("All");
 
-    const complaints = [
-        {
-            id: "CMP001",
-            title: "Water Supply Issue",
-            category: "Water Supply",
-            date: "02 Oct 2026",
-            location: "Kolhapur",
-            status: "Pending"
-        },
-        {
-            id: "CMP002",
-            title: "Street Light Not Working",
-            category: "Street Light",
-            date: "28 Sep 2026",
-            location: "Shahupuri",
-            status: "In Progress"
-        },
-        {
-            id: "CMP003",
-            title: "Garbage Collection Problem",
-            category: "Garbage",
-            date: "25 Sep 2026",
-            location: "Rajarampuri",
-            status: "Resolved"
-        },
-        {
-            id: "CMP004",
-            title: "Damaged Road",
-            category: "Road Damage",
-            date: "20 Sep 2026",
-            location: "Tarabai Park",
-            status: "Pending"
-        }
-    ];
 
-    const getStatusClass = (status) => {
-        if (status === "Pending") return "status-pending";
-        if (status === "In Progress") return "status-progress";
-        return "status-resolved";
+    // =========================================================
+    // FETCH CITIZEN COMPLAINTS
+    // =========================================================
+
+    useEffect(() => {
+
+        if (!user?.id) {
+            return;
+        }
+
+        const fetchComplaints = async () => {
+
+            try {
+
+                const response = await fetch(
+                    `http://localhost:8080/api/citizen/${user.id}/complaints`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Failed to fetch complaints"
+                    );
+                }
+
+                setComplaints(data);
+                setError("");
+
+            } catch (error) {
+
+                console.error(
+                    "Error fetching complaints:",
+                    error
+                );
+
+                setError(
+                    error.message || "Failed to fetch complaints"
+                );
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
+        fetchComplaints();
+
+    }, [user.id]);
+
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
+    const handleLogout = () => {
+
+        localStorage.removeItem("user");
+
+        navigate("/login");
+
     };
 
+
+    // =========================================================
+    // STATUS CSS
+    // =========================================================
+
+    const getStatusClass = (status) => {
+
+        const normalizedStatus = status?.toUpperCase();
+
+        if (normalizedStatus === "PENDING") {
+            return "status-pending";
+        }
+
+        if (
+            normalizedStatus === "IN_PROGRESS" ||
+            normalizedStatus === "IN PROGRESS"
+        ) {
+            return "status-progress";
+        }
+
+        if (normalizedStatus === "RESOLVED") {
+            return "status-resolved";
+        }
+
+        return "status-pending";
+    };
+
+
+    // =========================================================
+    // DATE FORMAT
+    // =========================================================
+
+    const formatDate = (date) => {
+
+        if (!date) {
+            return "-";
+        }
+
+        return new Date(date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    };
+
+
+    // =========================================================
+    // FILTER COMPLAINTS
+    // =========================================================
+
     const filteredComplaints = complaints.filter((complaint) => {
+
+        const complaintId =
+            `CMP${String(complaint.id).padStart(3, "0")}`;
+
+        const description =
+            complaint.description || "";
+
+        const category =
+            complaint.category || "";
+
+        const location =
+            complaint.location || "";
+
+        const searchText =
+            search.toLowerCase();
+
         const matchesSearch =
-            complaint.id.toLowerCase().includes(search.toLowerCase()) ||
-            complaint.title.toLowerCase().includes(search.toLowerCase()) ||
-            complaint.category.toLowerCase().includes(search.toLowerCase());
+            complaintId
+                .toLowerCase()
+                .includes(searchText) ||
+
+            description
+                .toLowerCase()
+                .includes(searchText) ||
+
+            category
+                .toLowerCase()
+                .includes(searchText) ||
+
+            location
+                .toLowerCase()
+                .includes(searchText);
+
+
+        const normalizedStatus =
+            complaint.status?.toUpperCase();
 
         const matchesFilter =
-            filter === "All" || complaint.status === filter;
+            filter === "All" ||
+            normalizedStatus === filter.toUpperCase();
+
 
         return matchesSearch && matchesFilter;
+
     });
 
+
+    // =========================================================
+    // STATISTICS
+    // =========================================================
+
+    const totalComplaints =
+        complaints.length;
+
+
+    const pendingComplaints =
+        complaints.filter(
+            (complaint) =>
+                complaint.status?.toUpperCase() === "PENDING"
+        ).length;
+
+
+    const inProgressComplaints =
+        complaints.filter(
+            (complaint) =>
+                complaint.status?.toUpperCase() === "IN_PROGRESS" ||
+                complaint.status?.toUpperCase() === "IN PROGRESS"
+        ).length;
+
+
+    const resolvedComplaints =
+        complaints.filter(
+            (complaint) =>
+                complaint.status?.toUpperCase() === "RESOLVED"
+        ).length;
+
+
+    // =========================================================
+    // UI
+    // =========================================================
+
     return (
+
         <div className="citizen-app">
 
-            {/* SIDEBAR */}
+
+            {/* =================================================
+                SIDEBAR
+            ================================================= */}
+
             <aside className="citizen-sidebar">
 
                 <div className="citizen-brand">
-                    <h2>🏛 CityConnect</h2>
-                    <p>Municipal Citizen Portal</p>
+
+                    <h2>
+                        🏛 CityConnect
+                    </h2>
+
+                    <p>
+                        Municipal Citizen Portal
+                    </p>
+
                 </div>
+
 
                 <nav className="citizen-nav">
 
-                    <a href="#dashboard"
+
+                    {/* Dashboard */}
+
+                    <a
+                        href="#dashboard"
                         onClick={(e) => {
+
                             e.preventDefault();
+
                             navigate("/dashboard");
-                        }}>
+
+                        }}
+                    >
                         🏠 Dashboard
                     </a>
 
-                    <a href="#create"
+
+                    {/* Create Complaint */}
+
+                    <a
+                        href="#create"
                         onClick={(e) => {
+
                             e.preventDefault();
-                            navigate("/citizen/create-complaint");
-                        }}>
+
+                            navigate(
+                                "/citizen/create-complaint"
+                            );
+
+                        }}
+                    >
                         📝 Create Complaint
                     </a>
 
-                    <a href="#complaints" className="active"
-                        onClick={(e) => e.preventDefault()}>
+
+                    {/* My Complaints */}
+
+                    <a
+                        href="#complaints"
+                        className="active"
+                        onClick={(e) =>
+                            e.preventDefault()
+                        }
+                    >
                         📋 My Complaints
                     </a>
 
-                    <a href="#profile"
+
+                    {/* Profile */}
+
+                    <a
+                        href="#profile"
                         onClick={(e) => {
+
                             e.preventDefault();
-                            navigate("/citizen/profile");
-                        }}>
+
+                            navigate(
+                                "/citizen/profile"
+                            );
+
+                        }}
+                    >
                         👤 My Profile
                     </a>
 
                 </nav>
 
-                <div style={{ marginTop: "50px" }}>
+
+                {/* Logout */}
+
+                <div
+                    style={{
+                        marginTop: "50px"
+                    }}
+                >
+
                     <button
                         className="citizen-btn citizen-btn-secondary"
-                        style={{ width: "100%" }}
-                        onClick={() => {
-                            localStorage.removeItem("user");
-                            navigate("/login");
+                        style={{
+                            width: "100%"
                         }}
+                        onClick={handleLogout}
                     >
                         ↪ Logout
                     </button>
+
                 </div>
 
             </aside>
 
-            {/* MAIN CONTENT */}
+
+
+            {/* =================================================
+                MAIN CONTENT
+            ================================================= */}
+
             <main className="citizen-main">
+
+
+                {/* =================================================
+                    TOP HEADER
+                ================================================= */}
 
                 <div className="citizen-topbar">
 
                     <div>
-                        <h1>My Complaints</h1>
+
+                        <h1>
+                            My Complaints
+                        </h1>
+
                         <p>
                             View and track the progress of your complaints.
                         </p>
+
                     </div>
+
 
                     <div className="citizen-user">
+
                         👤 {user.name || "Citizen"}
+
                     </div>
 
                 </div>
 
-                {/* SUMMARY */}
-                <div className="citizen-stats">
 
-                    <div className="citizen-stat-card stat-blue">
-                        <p>Total Complaints</p>
-                        <h2>{complaints.length}</h2>
+
+                {/* =================================================
+                    SUMMARY CARDS
+                ================================================= */}
+
+                {!loading && !error && (
+
+                    <div className="citizen-stats">
+
+
+                        {/* Total */}
+
+                        <div className="citizen-stat-card stat-blue">
+
+                            <p>
+                                Total Complaints
+                            </p>
+
+                            <h2>
+                                {totalComplaints}
+                            </h2>
+
+                            <span>
+                                All submitted complaints
+                            </span>
+
+                        </div>
+
+
+                        {/* Pending */}
+
+                        <div className="citizen-stat-card stat-orange">
+
+                            <p>
+                                Pending
+                            </p>
+
+                            <h2>
+                                {pendingComplaints}
+                            </h2>
+
+                            <span>
+                                Awaiting action
+                            </span>
+
+                        </div>
+
+
+                        {/* In Progress */}
+
+                        <div className="citizen-stat-card stat-purple">
+
+                            <p>
+                                In Progress
+                            </p>
+
+                            <h2>
+                                {inProgressComplaints}
+                            </h2>
+
+                            <span>
+                                Currently being addressed
+                            </span>
+
+                        </div>
+
+
+                        {/* Resolved */}
+
+                        <div className="citizen-stat-card stat-green">
+
+                            <p>
+                                Resolved
+                            </p>
+
+                            <h2>
+                                {resolvedComplaints}
+                            </h2>
+
+                            <span>
+                                Successfully completed
+                            </span>
+
+                        </div>
+
                     </div>
 
-                    <div className="citizen-stat-card stat-orange">
-                        <p>Pending</p>
-                        <h2>
-                            {complaints.filter(c => c.status === "Pending").length}
-                        </h2>
+                )}
+
+
+
+                {/* =================================================
+                    LOADING
+                ================================================= */}
+
+                {loading && (
+
+                    <div className="citizen-panel">
+
+                        <p>
+                            Loading your complaints...
+                        </p>
+
                     </div>
 
-                    <div className="citizen-stat-card stat-purple">
-                        <p>In Progress</p>
-                        <h2>
-                            {complaints.filter(c => c.status === "In Progress").length}
-                        </h2>
-                    </div>
+                )}
 
-                    <div className="citizen-stat-card stat-green">
-                        <p>Resolved</p>
-                        <h2>
-                            {complaints.filter(c => c.status === "Resolved").length}
-                        </h2>
-                    </div>
 
-                </div>
 
-                {/* COMPLAINT TABLE */}
-                <div className="citizen-panel">
+                {/* =================================================
+                    ERROR
+                ================================================= */}
 
-                    <h3>Complaint History</h3>
+                {error && !loading && (
 
-                    {/* SEARCH AND FILTER */}
-                    <div style={{
-                        display: "flex",
-                        gap: "15px",
-                        flexWrap: "wrap",
-                        marginBottom: "22px"
-                    }}>
+                    <div className="citizen-panel">
 
-                        <input
-                            type="text"
-                            placeholder="Search by ID, title or category..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                        <p
                             style={{
-                                flex: "1",
-                                minWidth: "220px",
-                                padding: "12px",
-                                border: "1px solid #dce3ed",
-                                borderRadius: "7px"
-                            }}
-                        />
-
-                        <select
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                            style={{
-                                padding: "12px",
-                                border: "1px solid #dce3ed",
-                                borderRadius: "7px"
+                                color: "red"
                             }}
                         >
-                            <option value="All">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Resolved">Resolved</option>
-                        </select>
+                            {error}
+                        </p>
 
                     </div>
 
-                    <table className="citizen-table">
+                )}
 
-                        <thead>
-                            <tr>
-                                <th>Complaint ID</th>
-                                <th>Title</th>
-                                <th>Category</th>
-                                <th>Date</th>
-                                <th>Location</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
 
-                        <tbody>
 
-                            {filteredComplaints.length > 0 ? (
+                {/* =================================================
+                    COMPLAINT DATA
+                ================================================= */}
 
-                                filteredComplaints.map((complaint) => (
+                {!loading && !error && (
 
-                                    <tr key={complaint.id}>
-                                        <td>{complaint.id}</td>
-                                        <td>{complaint.title}</td>
-                                        <td>{complaint.category}</td>
-                                        <td>{complaint.date}</td>
-                                        <td>{complaint.location}</td>
+                    <div className="citizen-panel">
 
-                                        <td>
-                                            <span className={`citizen-status ${getStatusClass(complaint.status)}`}>
-                                                {complaint.status}
-                                            </span>
-                                        </td>
-                                    </tr>
 
-                                ))
+                        <h3>
+                            Complaint History
+                        </h3>
 
-                            ) : (
+
+                        {/* =================================================
+                            SEARCH AND FILTER
+                        ================================================= */}
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "15px",
+                                flexWrap: "wrap",
+                                marginBottom: "22px"
+                            }}
+                        >
+
+
+                            {/* Search */}
+
+                            <input
+                                type="text"
+                                placeholder="Search by ID, description, category or location..."
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                                style={{
+                                    flex: "1",
+                                    minWidth: "220px",
+                                    padding: "12px",
+                                    border: "1px solid #dce3ed",
+                                    borderRadius: "7px"
+                                }}
+                            />
+
+
+                            {/* Filter */}
+
+                            <select
+                                value={filter}
+                                onChange={(e) =>
+                                    setFilter(e.target.value)
+                                }
+                                style={{
+                                    padding: "12px",
+                                    border: "1px solid #dce3ed",
+                                    borderRadius: "7px"
+                                }}
+                            >
+
+                                <option value="All">
+                                    All Status
+                                </option>
+
+                                <option value="Pending">
+                                    Pending
+                                </option>
+
+                                <option value="In Progress">
+                                    In Progress
+                                </option>
+
+                                <option value="Resolved">
+                                    Resolved
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        {/* =================================================
+                            COMPLAINT TABLE
+                        ================================================= */}
+
+                        <table className="citizen-table">
+
+                            <thead>
 
                                 <tr>
-                                    <td colSpan="6" style={{
-                                        textAlign: "center",
-                                        padding: "30px"
-                                    }}>
-                                        No complaints found.
-                                    </td>
+
+                                    <th>
+                                        Complaint ID
+                                    </th>
+
+                                    <th>
+                                        Description
+                                    </th>
+
+                                    <th>
+                                        Category
+                                    </th>
+
+                                    <th>
+                                        Date
+                                    </th>
+
+                                    <th>
+                                        Location
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
                                 </tr>
 
-                            )}
+                            </thead>
 
-                        </tbody>
 
-                    </table>
+                            <tbody>
 
-                    <p style={{
+                                {filteredComplaints.length > 0 ? (
+
+                                    filteredComplaints.map(
+                                        (complaint) => (
+
+                                            <tr
+                                                key={complaint.id}
+                                            >
+
+
+                                                {/* Complaint ID */}
+
+                                                <td>
+
+                                                    CMP
+                                                    {String(
+                                                        complaint.id
+                                                    ).padStart(
+                                                        3,
+                                                        "0"
+                                                    )}
+
+                                                </td>
+
+
+                                                {/* Description */}
+
+                                                <td>
+
+                                                    {complaint.description ||
+                                                        "-"}
+
+                                                </td>
+
+
+                                                {/* Category */}
+
+                                                <td>
+
+                                                    {complaint.category ||
+                                                        "-"}
+
+                                                </td>
+
+
+                                                {/* Date */}
+
+                                                <td>
+
+                                                    {formatDate(
+                                                        complaint.createdAt
+                                                    )}
+
+                                                </td>
+
+
+                                                {/* Location */}
+
+                                                <td>
+
+                                                    {complaint.location ||
+                                                        "-"}
+
+                                                </td>
+
+
+                                                {/* Status */}
+
+                                                <td>
+
+                                                    <span
+                                                        className={`citizen-status ${getStatusClass(
+                                                            complaint.status
+                                                        )}`}
+                                                    >
+
+                                                        {complaint.status ||
+                                                            "PENDING"}
+
+                                                    </span>
+
+                                                </td>
+
+                                            </tr>
+
+                                        )
+                                    )
+
+                                ) : (
+
+                                    <tr>
+
+                                        <td
+                                            colSpan="6"
+                                            style={{
+                                                textAlign: "center",
+                                                padding: "30px"
+                                            }}
+                                        >
+
+                                            No complaints found.
+
+                                        </td>
+
+                                    </tr>
+
+                                )}
+
+                            </tbody>
+
+                        </table>
+
+
+                    </div>
+
+                )}
+
+
+
+                {/* =================================================
+                    FOOTER
+                ================================================= */}
+
+                <p
+                    style={{
+                        textAlign: "center",
                         color: "#8290a3",
                         fontSize: "12px",
-                        marginTop: "18px"
-                    }}>
-                        Note: Complaint records are sample data for the initial UI.
-                    </p>
-
-                </div>
-
-                <p style={{
-                    textAlign: "center",
-                    color: "#8290a3",
-                    fontSize: "12px",
-                    marginTop: "30px"
-                }}>
+                        marginTop: "30px"
+                    }}
+                >
                     © 2026 CityConnect | Municipal Complaint Management System
                 </p>
+
 
             </main>
 
         </div>
+
     );
 }
+
 
 export default MyComplaints;
