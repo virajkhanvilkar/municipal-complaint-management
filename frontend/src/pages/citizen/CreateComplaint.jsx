@@ -26,23 +26,95 @@ function CreateComplaint() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        setMessage(
-            "Complaint submitted successfully! Backend integration will be added later."
-        );
+        setMessage("");
 
-        setFormData({
-            title: "",
-            category: "",
-            location: "",
-            landmark: "",
-            description: ""
-        });
+        // Check logged-in citizen
+        if (!user.id) {
+            setMessage("User information not found. Please login again.");
+            return;
+        }
 
-        setAttachment(null);
-        e.target.reset();
+        // Required field validation
+        if (!formData.title.trim()) {
+            setMessage("Please enter complaint title.");
+            return;
+        }
+
+        if (!formData.category) {
+            setMessage("Please select complaint category.");
+            return;
+        }
+
+        if (!formData.location.trim()) {
+            setMessage("Please enter complaint location.");
+            return;
+        }
+
+        if (!formData.description.trim()) {
+            setMessage("Please enter complaint description.");
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                "http://localhost:8080/api/citizen/complaints",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        citizenId: user.id,
+                        category: formData.category,
+                        location: formData.location,
+                        description: formData.description
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            console.log("Complaint response:", data);
+
+            if (response.ok) {
+
+                setMessage(
+                    data.message || "Complaint submitted successfully!"
+                );
+
+                setFormData({
+                    title: "",
+                    category: "",
+                    location: "",
+                    landmark: "",
+                    description: ""
+                });
+
+                setAttachment(null);
+
+                e.target.reset();
+
+            } else {
+
+                setMessage(
+                    data.message || "Failed to submit complaint."
+                );
+            }
+
+        } catch (error) {
+
+            console.error("Complaint submission error:", error);
+
+            setMessage(
+                "Cannot connect to Spring Boot server."
+            );
+        }
     };
 
     return (
