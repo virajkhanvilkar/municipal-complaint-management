@@ -1,8 +1,16 @@
+
 package com.municipal.complaint_management.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "complaints")
@@ -12,13 +20,19 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Maps to the existing user_id column in MySQL
     @ManyToOne
-    @JoinColumn(name = "citizen_id")
+    @JoinColumn(name = "user_id")
     private User citizen;
 
+    // Employee assigned to this complaint
     @ManyToOne
     @JoinColumn(name = "employee_id")
     private User employee;
+
+    // Complaint title (required by the existing database)
+    @Column(nullable = false)
+    private String title;
 
     private String category;
 
@@ -34,13 +48,9 @@ public class Complaint {
 
     private LocalDateTime createdAt;
 
-
-    // Default constructor
     public Complaint() {
     }
 
-
-    // ID
     public Long getId() {
         return id;
     }
@@ -49,8 +59,6 @@ public class Complaint {
         this.id = id;
     }
 
-
-    // Citizen
     public User getCitizen() {
         return citizen;
     }
@@ -59,8 +67,6 @@ public class Complaint {
         this.citizen = citizen;
     }
 
-
-    // Employee
     public User getEmployee() {
         return employee;
     }
@@ -69,8 +75,14 @@ public class Complaint {
         this.employee = employee;
     }
 
+    public String getTitle() {
+        return title;
+    }
 
-    // Category
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getCategory() {
         return category;
     }
@@ -79,8 +91,6 @@ public class Complaint {
         this.category = category;
     }
 
-
-    // Location
     public String getLocation() {
         return location;
     }
@@ -89,8 +99,6 @@ public class Complaint {
         this.location = location;
     }
 
-
-    // Description
     public String getDescription() {
         return description;
     }
@@ -99,8 +107,6 @@ public class Complaint {
         this.description = description;
     }
 
-
-    // Status
     public String getStatus() {
         return status;
     }
@@ -109,8 +115,6 @@ public class Complaint {
         this.status = status;
     }
 
-
-    // Remarks
     public String getRemarks() {
         return remarks;
     }
@@ -119,8 +123,6 @@ public class Complaint {
         this.remarks = remarks;
     }
 
-
-    // Created At
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
