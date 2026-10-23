@@ -58,7 +58,6 @@ public class AdminService {
         return complaintRepository.save(complaint);
     }
 
-    // Get real dashboard counts from the database
     public Map<String, Long> getDashboardStatistics() {
 
         Map<String, Long> statistics = new HashMap<>();
@@ -72,3 +71,4 @@ public class AdminService {
         return statistics;
     }
 }
+

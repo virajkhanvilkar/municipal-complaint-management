@@ -26,96 +26,88 @@ function CreateComplaint() {
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
 
-        setMessage("");
+	const handleSubmit = async (e) => {
+	    e.preventDefault();
+	    setMessage("");
 
-        // Check logged-in citizen
-        if (!user.id) {
-            setMessage("User information not found. Please login again.");
-            return;
-        }
+	    // Check logged-in citizen
+	    if (!user.id) {
+	        setMessage("User information not found. Please login again.");
+	        return;
+	    }
 
-        // Required field validation
-        if (!formData.title.trim()) {
-            setMessage("Please enter complaint title.");
-            return;
-        }
+	    // Validate required fields
+	    if (!formData.title.trim()) {
+	        setMessage("Please enter complaint title.");
+	        return;
+	    }
 
-        if (!formData.category) {
-            setMessage("Please select complaint category.");
-            return;
-        }
+	    if (!formData.category) {
+	        setMessage("Please select complaint category.");
+	        return;
+	    }
 
-        if (!formData.location.trim()) {
-            setMessage("Please enter complaint location.");
-            return;
-        }
+	    if (!formData.location.trim()) {
+	        setMessage("Please enter complaint location.");
+	        return;
+	    }
 
-        if (!formData.description.trim()) {
-            setMessage("Please enter complaint description.");
-            return;
-        }
+	    if (!formData.description.trim()) {
+	        setMessage("Please enter complaint description.");
+	        return;
+	    }
 
-        try {
+	    try {
+	        const response = await fetch(
+	            "http://localhost:8080/api/citizen/complaints",
+	            {
+	                method: "POST",
+	                headers: {
+	                    "Content-Type": "application/json"
+	                },
+	                body: JSON.stringify({
+	                    citizenId: user.id,
+	                    title: formData.title.trim(),
+	                    category: formData.category,
+	                    location: formData.location.trim(),
+	                    description: formData.description.trim()
+	                })
+	            }
+	        );
 
-            const response = await fetch(
-                "http://localhost:8080/api/citizen/complaints",
-                {
-                    method: "POST",
+	        const data = await response.json();
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+	        console.log("Complaint response:", data);
 
-                    body: JSON.stringify({
-                        citizenId: user.id,
-                        category: formData.category,
-                        location: formData.location,
-                        description: formData.description
-                    })
-                }
-            );
+	        if (response.ok) {
+	            setMessage(
+	                data.message || "Complaint submitted successfully!"
+	            );
 
-            const data = await response.json();
+	            setFormData({
+	                title: "",
+	                category: "",
+	                location: "",
+	                landmark: "",
+	                description: ""
+	            });
 
-            console.log("Complaint response:", data);
+	            setAttachment(null);
+	            e.target.reset();
+	        } else {
+	            setMessage(
+	                data.message ||
+	                data.error ||
+	                "Failed to submit complaint."
+	            );
+	        }
+	    } catch (error) {
+	        console.error("Complaint submission error:", error);
 
-            if (response.ok) {
-
-                setMessage(
-                    data.message || "Complaint submitted successfully!"
-                );
-
-                setFormData({
-                    title: "",
-                    category: "",
-                    location: "",
-                    landmark: "",
-                    description: ""
-                });
-
-                setAttachment(null);
-
-                e.target.reset();
-
-            } else {
-
-                setMessage(
-                    data.message || "Failed to submit complaint."
-                );
-            }
-
-        } catch (error) {
-
-            console.error("Complaint submission error:", error);
-
-            setMessage(
-                "Cannot connect to Spring Boot server."
-            );
-        }
-    };
+	        setMessage("Cannot connect to Spring Boot server.");
+	    }
+	};
 
     return (
         <div className="citizen-app">

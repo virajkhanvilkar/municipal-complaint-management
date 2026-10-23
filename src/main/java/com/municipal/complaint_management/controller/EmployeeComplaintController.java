@@ -1,3 +1,4 @@
+
 package com.municipal.complaint_management.controller;
 
 import java.util.List;
@@ -11,7 +12,10 @@ import com.municipal.complaint_management.service.EmployeeComplaintService;
 
 @RestController
 @RequestMapping("/api/employee")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "http://localhost:5174"
+})
 public class EmployeeComplaintController {
 
     private final EmployeeComplaintService employeeComplaintService;
@@ -22,31 +26,28 @@ public class EmployeeComplaintController {
     }
 
     @GetMapping("/{employeeId}/complaints")
-    public ResponseEntity<List<Complaint>> getAssignedComplaints(
-            @PathVariable Long employeeId) {
+    public ResponseEntity<?> getEmployeeComplaints(
+            @PathVariable("employeeId") Long employeeId) {
 
         return ResponseEntity.ok(
-                employeeComplaintService.getAssignedComplaints(employeeId)
-        );
+                employeeComplaintService.getAssignedComplaints(employeeId));
     }
 
     @GetMapping("/complaints/{complaintId}")
     public ResponseEntity<Complaint> getComplaint(
-            @PathVariable Long complaintId) {
+            @PathVariable("complaintId") Long complaintId) {
 
         return ResponseEntity.ok(
-                employeeComplaintService.getComplaintById(complaintId)
-        );
+                employeeComplaintService.getComplaintById(complaintId));
     }
 
     @PutMapping("/complaints/{complaintId}/status")
     public ResponseEntity<Complaint> updateComplaintStatus(
-            @PathVariable Long complaintId,
+            @PathVariable("complaintId") Long complaintId,
             @RequestBody Map<String, Object> request) {
 
-        Long employeeId = Long.valueOf(
-                request.get("employeeId").toString()
-        );
+        Long employeeId =
+                Long.valueOf(request.get("employeeId").toString());
 
         String status = request.get("status").toString();
 
@@ -56,11 +57,7 @@ public class EmployeeComplaintController {
 
         Complaint updatedComplaint =
                 employeeComplaintService.updateComplaintStatus(
-                        complaintId,
-                        employeeId,
-                        status,
-                        remarks
-                );
+                        complaintId, employeeId, status, remarks);
 
         return ResponseEntity.ok(updatedComplaint);
     }
