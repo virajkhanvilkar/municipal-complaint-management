@@ -1,3 +1,4 @@
+
 package com.municipal.complaint_management.repository;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface ComplaintRepository
     List<Complaint> findByEmployee(User employee);
 
     List<Complaint> findByCitizen(User citizen);
+
+    long countByStatusIgnoreCase(String status);
 }

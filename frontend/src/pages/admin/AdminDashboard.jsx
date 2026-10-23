@@ -1,4 +1,6 @@
+
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./admin.css";
 
 function AdminDashboard() {
@@ -10,17 +12,80 @@ function AdminDashboard() {
         role: "ADMIN",
     };
 
+    const [stats, setStats] = useState({
+        totalComplaints: 0,
+        pending: 0,
+        inProgress: 0,
+        resolved: 0,
+        totalUsers: 0,
+    });
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchDashboardStats = async () => {
+            try {
+                const response = await fetch(
+                    "http://localhost:8080/api/admin/dashboard"
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to load dashboard statistics");
+                }
+
+                const data = await response.json();
+                setStats(data);
+                setError("");
+            } catch (err) {
+                setError(
+                    "Unable to load live statistics. Check that the backend is running."
+                );
+                console.error("Dashboard API error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardStats();
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem("user");
         navigate("/login");
     };
 
+    const statCards = [
+        {
+            title: "Total Complaints",
+            value: stats.totalComplaints,
+            icon: "📋",
+        },
+        {
+            title: "Pending",
+            value: stats.pending,
+            icon: "⏳",
+        },
+        {
+            title: "In Progress",
+            value: stats.inProgress,
+            icon: "🔄",
+        },
+        {
+            title: "Resolved",
+            value: stats.resolved,
+            icon: "✅",
+        },
+        {
+            title: "Total Users",
+            value: stats.totalUsers,
+            icon: "👥",
+        },
+    ];
+
     return (
         <div className="admin-page">
-
-            {/* ================= HEADER ================= */}
             <header className="admin-header">
-
                 <div className="admin-brand">
                     <h1>Admin Dashboard</h1>
                     <p>Municipal Complaint Management System</p>
@@ -40,98 +105,50 @@ function AdminDashboard() {
                         Logout
                     </button>
                 </nav>
-
             </header>
 
-
-            {/* ================= MAIN CONTENT ================= */}
             <main className="admin-content">
-
-                {/* Welcome */}
                 <section className="admin-welcome">
-
-                    <h2>
-                        Welcome, {user.name || "Admin"}
-                    </h2>
-
+                    <h2>Welcome, {user.name || "Admin"}</h2>
                     <p>
                         Monitor complaints, manage users, and oversee
                         the municipal complaint system.
                     </p>
-
                 </section>
 
+                {error && (
+                    <p role="alert" className="admin-error">
+                        {error}
+                    </p>
+                )}
 
-                {/* ================= STATISTICS ================= */}
                 <section className="admin-stats">
+                    {statCards.map((card) => (
+                        <div className="admin-stat-card" key={card.title}>
+                            <span className="admin-stat-icon">
+                                {card.icon}
+                            </span>
 
-                    <div className="admin-stat-card">
-                        <span className="admin-stat-icon">📋</span>
-
-                        <div>
-                            <h3>Total Complaints</h3>
-                            <p>—</p>
+                            <div>
+                                <h3>{card.title}</h3>
+                                <p>
+                                    {loading ? "Loading..." : card.value ?? 0}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-
-
-                    <div className="admin-stat-card">
-                        <span className="admin-stat-icon">⏳</span>
-
-                        <div>
-                            <h3>Pending</h3>
-                            <p>—</p>
-                        </div>
-                    </div>
-
-
-                    <div className="admin-stat-card">
-                        <span className="admin-stat-icon">🔄</span>
-
-                        <div>
-                            <h3>In Progress</h3>
-                            <p>—</p>
-                        </div>
-                    </div>
-
-
-                    <div className="admin-stat-card">
-                        <span className="admin-stat-icon">✅</span>
-
-                        <div>
-                            <h3>Resolved</h3>
-                            <p>—</p>
-                        </div>
-                    </div>
-
-
-                    <div className="admin-stat-card">
-                        <span className="admin-stat-icon">👥</span>
-
-                        <div>
-                            <h3>Total Users</h3>
-                            <p>—</p>
-                        </div>
-                    </div>
-
+                    ))}
                 </section>
 
-
-                {/* ================= QUICK ACTIONS ================= */}
                 <section className="admin-actions">
-
                     <div className="admin-section-heading">
                         <h2>Quick Actions</h2>
-
                         <p>
                             Quickly access important administrative
                             functions.
                         </p>
                     </div>
 
-
                     <div className="admin-action-buttons">
-
                         <Link
                             to="/admin/complaints"
                             className="admin-action-button"
@@ -152,32 +169,23 @@ function AdminDashboard() {
                         >
                             View Profile
                         </Link>
-
                     </div>
-
                 </section>
 
-
-                {/* ================= RECENT ACTIVITY ================= */}
                 <section className="admin-recent">
-
                     <div className="admin-section-heading">
                         <h2>Recent Activity</h2>
-
                         <p>
                             Recent administrative activity will appear here.
                         </p>
                     </div>
 
                     <div className="admin-empty-state">
-                        <span>📊</span>
+                        <span>📭</span>
                         <p>No recent activity available.</p>
                     </div>
-
                 </section>
-
             </main>
-
         </div>
     );
 }
