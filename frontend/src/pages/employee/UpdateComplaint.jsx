@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./UpdateComplaint.css";
 
+const API_URL = "http://localhost:8080/api/employee";
+
 function UpdateComplaint() {
   const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState("");
@@ -11,57 +13,75 @@ function UpdateComplaint() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const employeeId = user?.id;
+  const getEmployeeId = () => {
+    const storedUser = localStorage.getItem("user");
 
-    if (!employeeId) {
-      setError("Employee ID not found. Please login again.");
-      setLoading(false);
-      return;
+    if (!storedUser) {
+      throw new Error("Please log in again.");
     }
 
-    fetch(`http://localhost:8080/api/employee/${employeeId}/complaints`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to load complaints");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setComplaints(data);
+    const user = JSON.parse(storedUser);
+
+    if (!user?.id) {
+      throw new Error("Employee ID not found. Please log in again.");
+    }
+
+    return user.id;
+  };
+
+  const loadComplaints = async () => {
+    const employeeId = getEmployeeId();
+
+    const response = await fetch(
+      `${API_URL}/${employeeId}/complaints`
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Unable to load complaints (HTTP ${response.status}).`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid complaints data received.");
+    }
+
+    setComplaints(data);
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await loadComplaints();
+      } catch (err) {
+        setError(err.message || "Unable to load complaints.");
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    initialize();
   }, []);
 
   const handleComplaintChange = (e) => {
     const complaintId = e.target.value;
+
     setSelectedComplaint(complaintId);
     setMessage("");
     setError("");
 
     const complaint = complaints.find(
-      (item) => String(item.id) === String(complaintId)
+      (item) => String(item.id) === complaintId
     );
 
-    if (complaint) {
-      setStatus(complaint.status || "PENDING");
-      setRemarks(complaint.remarks || "");
-    } else {
-      setStatus("");
-      setRemarks("");
-    }
+    setStatus(complaint?.status || (complaintId ? "PENDING" : ""));
+    setRemarks(complaint?.remarks || "");
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    const employeeId = user?.id;
 
     if (!selectedComplaint) {
       setError("Please select a complaint.");
@@ -78,40 +98,62 @@ function UpdateComplaint() {
     setError("");
 
     try {
+      const employeeId = getEmployeeId();
+
       const response = await fetch(
-        `http://localhost:8080/api/employee/complaints/${selectedComplaint}/status`,
+        `${API_URL}/complaints/${selectedComplaint}/status`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            employeeId: employeeId,
-            status: status,
-            remarks: remarks,
+            employeeId,
+            status,
+            remarks,
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update complaint");
+        const errorText = await response.text();
+        throw new Error(
+          errorText || `Failed to update complaint (HTTP ${response.status}).`
+        );
       }
 
-      const updatedComplaint = await response.json();
+      await response.json();
 
-      setComplaints((previousComplaints) =>
-        previousComplaints.map((complaint) =>
-          complaint.id === updatedComplaint.id
-            ? updatedComplaint
-            : complaint
-        )
+      await loadComplaints();
+
+      const updated = complaints.find(
+        (item) => String(item.id) === String(selectedComplaint)
       );
 
       setMessage(
-        `Complaint #${updatedComplaint.id} updated successfully.`
+        `Complaint #${selectedComplaint} updated successfully.`
       );
+
+      // Re-selecting is not necessary; reload the saved values.
+      const refreshedResponse = await fetch(
+        `${API_URL}/${employeeId}/complaints`
+      );
+
+      if (refreshedResponse.ok) {
+        const refreshed = await refreshedResponse.json();
+        setComplaints(refreshed);
+
+        const refreshedComplaint = refreshed.find(
+          (item) => String(item.id) === String(selectedComplaint)
+        );
+
+        if (refreshedComplaint) {
+          setStatus(refreshedComplaint.status || "PENDING");
+          setRemarks(refreshedComplaint.remarks || "");
+        }
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Unable to update complaint.");
     } finally {
       setUpdating(false);
     }
@@ -136,7 +178,6 @@ function UpdateComplaint() {
 
       <div className="update-box">
         {error && <div className="update-error">{error}</div>}
-
         {message && <div className="update-success">{message}</div>}
 
         {complaints.length === 0 ? (
@@ -146,17 +187,20 @@ function UpdateComplaint() {
         ) : (
           <form onSubmit={handleUpdate}>
             <div className="form-group">
-              <label>Select Complaint</label>
+              <label htmlFor="complaint">Select Complaint</label>
 
               <select
+                id="complaint"
                 value={selectedComplaint}
                 onChange={handleComplaintChange}
+                required
               >
                 <option value="">-- Select Complaint --</option>
 
                 {complaints.map((complaint) => (
                   <option key={complaint.id} value={complaint.id}>
-                    Complaint #{complaint.id} - {complaint.category}
+                    Complaint #{complaint.id} -{" "}
+                    {complaint.category || complaint.title || "Complaint"}
                   </option>
                 ))}
               </select>
@@ -164,44 +208,41 @@ function UpdateComplaint() {
 
             {selectedComplaint && (
               <>
-                <div className="selected-complaint">
-                  <h3>
-                    Complaint #{selectedComplaint}
-                  </h3>
+                {(() => {
+                  const complaint = complaints.find(
+                    (item) =>
+                      String(item.id) === String(selectedComplaint)
+                  );
 
-                  {(() => {
-                    const complaint = complaints.find(
-                      (item) =>
-                        String(item.id) === String(selectedComplaint)
-                    );
+                  if (!complaint) return null;
 
-                    return complaint ? (
-                      <>
-                        <p>
-                          <strong>Category:</strong>{" "}
-                          {complaint.category}
-                        </p>
-
-                        <p>
-                          <strong>Location:</strong>{" "}
-                          {complaint.location}
-                        </p>
-
-                        <p>
-                          <strong>Description:</strong>{" "}
-                          {complaint.description}
-                        </p>
-                      </>
-                    ) : null;
-                  })()}
-                </div>
+                  return (
+                    <div className="selected-complaint">
+                      <h3>Complaint #{complaint.id}</h3>
+                      <p>
+                        <strong>Category:</strong>{" "}
+                        {complaint.category || complaint.title || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Location:</strong>{" "}
+                        {complaint.location || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Description:</strong>{" "}
+                        {complaint.description || "N/A"}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <div className="form-group">
-                  <label>Complaint Status</label>
+                  <label htmlFor="status">Complaint Status</label>
 
                   <select
+                    id="status"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
+                    required
                   >
                     <option value="PENDING">Pending</option>
                     <option value="IN_PROGRESS">In Progress</option>
@@ -210,10 +251,12 @@ function UpdateComplaint() {
                 </div>
 
                 <div className="form-group">
-                  <label>Remarks</label>
+                  <label htmlFor="remarks">Remarks</label>
 
                   <textarea
+                    id="remarks"
                     rows="5"
+                    maxLength={2000}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
                     placeholder="Enter update remarks..."

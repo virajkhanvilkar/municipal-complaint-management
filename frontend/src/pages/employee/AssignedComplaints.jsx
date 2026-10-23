@@ -1,5 +1,8 @@
+
 import React, { useEffect, useState } from "react";
 import "./AssignedComplaints.css";
+
+const API_URL = "http://localhost:8080/api/employee";
 
 function AssignedComplaints() {
   const [complaints, setComplaints] = useState([]);
@@ -7,37 +10,58 @@ function AssignedComplaints() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const employeeId = user?.id;
+    const loadComplaints = async () => {
+      try {
+        const storedUser = localStorage.getItem("user");
 
-    if (!employeeId) {
-      setError("Employee ID not found. Please login again.");
-      setLoading(false);
-      return;
-    }
-
-    fetch(`http://localhost:8080/api/employee/${employeeId}/complaints`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch assigned complaints");
+        if (!storedUser) {
+          throw new Error("Please log in again.");
         }
-        return response.json();
-      })
-      .then((data) => {
+
+        const user = JSON.parse(storedUser);
+
+        if (!user?.id) {
+          throw new Error("Employee ID not found. Please log in again.");
+        }
+
+        const response = await fetch(
+          `${API_URL}/${user.id}/complaints`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Unable to load complaints (HTTP ${response.status}).`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid complaints data received.");
+        }
+
         setComplaints(data);
+      } catch (err) {
+        setError(err.message || "Unable to load complaints.");
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    loadComplaints();
   }, []);
 
   const getStatusClass = (status) => {
-    if (status === "PENDING") return "status-pending";
-    if (status === "IN_PROGRESS") return "status-progress";
-    if (status === "RESOLVED") return "status-resolved";
-    return "";
+    switch (status?.toUpperCase()) {
+      case "PENDING":
+        return "status-pending";
+      case "IN_PROGRESS":
+        return "status-progress";
+      case "RESOLVED":
+        return "status-resolved";
+      default:
+        return "";
+    }
   };
 
   if (loading) {
@@ -63,7 +87,7 @@ function AssignedComplaints() {
       <div className="assigned-header">
         <div>
           <h1>Assigned Complaints</h1>
-          <p>View and manage complaints assigned to you.</p>
+          <p>View and track your assigned municipal complaints.</p>
         </div>
 
         <div className="complaint-count">
@@ -93,16 +117,16 @@ function AssignedComplaints() {
                     complaint.status
                   )}`}
                 >
-                  {complaint.status === "IN_PROGRESS"
-                    ? "IN PROGRESS"
-                    : complaint.status}
+                  {(complaint.status || "UNKNOWN").replace("_", " ")}
                 </span>
               </div>
 
               <div className="complaint-details">
                 <div className="detail-box">
                   <span>Category</span>
-                  <strong>{complaint.category || "Not available"}</strong>
+                  <strong>
+                    {complaint.category || complaint.title || "Not available"}
+                  </strong>
                 </div>
 
                 <div className="detail-box">
@@ -113,7 +137,9 @@ function AssignedComplaints() {
 
               <div className="description-section">
                 <span>Description</span>
-                <p>{complaint.description || "No description available."}</p>
+                <p>
+                  {complaint.description || "No description available."}
+                </p>
               </div>
 
               <div className="citizen-section">

@@ -1,16 +1,111 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./EmployeeDashboard.css";
 
+const API_URL = "http://localhost:8080/api/employee";
+
 function EmployeeDashboard() {
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(null);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedUser) {
+          navigate("/");
+          return;
+        }
+
+        const loggedInUser = JSON.parse(storedUser);
+
+        if (!loggedInUser?.id) {
+          throw new Error("Employee information not found. Please log in again.");
+        }
+
+        setUser(loggedInUser);
+
+        const response = await fetch(
+          `${API_URL}/${loggedInUser.id}/complaints`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Unable to load complaints (HTTP ${response.status}).`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid complaints response from server.");
+        }
+
+        setComplaints(data);
+      } catch (err) {
+        setError(err.message || "Unable to load dashboard.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboard();
+  }, [navigate]);
+
+  const pendingCount = complaints.filter(
+    (c) => c.status?.toUpperCase() === "PENDING"
+  ).length;
+
+  const inProgressCount = complaints.filter(
+    (c) => c.status?.toUpperCase() === "IN_PROGRESS"
+  ).length;
+
+  const resolvedCount = complaints.filter(
+    (c) => c.status?.toUpperCase() === "RESOLVED"
+  ).length;
+
+  const recentComplaints = [...complaints]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime()
+    )
+    .slice(0, 5);
+
+  const getStatusClass = (status) => {
+    switch (status?.toUpperCase()) {
+      case "PENDING":
+        return "pending";
+      case "IN_PROGRESS":
+        return "progress";
+      case "RESOLVED":
+        return "resolved";
+      default:
+        return "";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="employee-layout">
+        <main className="employee-main">
+          <p>Loading employee dashboard...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="employee-layout">
-
-      {/* Sidebar */}
       <aside className="employee-sidebar">
-
         <div className="sidebar-logo">
           <div className="logo-icon">🏛️</div>
-
           <div>
             <h2>Municipal</h2>
             <span>Complaint System</span>
@@ -18,191 +113,145 @@ function EmployeeDashboard() {
         </div>
 
         <div className="employee-info">
-          <div className="employee-avatar">E</div>
-
+          <div className="employee-avatar">
+            {(user?.name || "E").charAt(0).toUpperCase()}
+          </div>
           <div>
-            <h3>Employee</h3>
-            <p>EMPLOYEE</p>
+            <h3>{user?.name || "Employee"}</h3>
+            <p>{user?.role || "EMPLOYEE"}</p>
           </div>
         </div>
 
         <nav className="employee-nav">
-
-          <a href="/employee" className="active">
-            <span>📊</span>
-            Dashboard
-          </a>
-
-          <a href="/employee/complaints">
-            <span>📋</span>
-            Assigned Complaints
-          </a>
-
-          <a href="/employee/update-complaint">
-            <span>✏️</span>
-            Update Complaint
-          </a>
-
-          <a href="/employee/profile">
-            <span>👤</span>
-            Profile
-          </a>
-
+          <Link to="/employee" className="active">
+            🏠 Dashboard
+          </Link>
+          <Link to="/employee/complaints">
+            📋 Assigned Complaints
+          </Link>
+          <Link to="/employee/update-complaint">
+            ✏️ Update Complaint
+          </Link>
+          <Link to="/employee/profile">
+            👤 Profile
+          </Link>
         </nav>
 
         <div className="sidebar-bottom">
-          <a href="/">
-            <span>↪</span>
-            Logout
-          </a>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem("user");
+              localStorage.removeItem("token");
+              navigate("/");
+            }}
+          >
+            ↪ Logout
+          </button>
         </div>
-
       </aside>
 
-      {/* Main Content */}
       <main className="employee-main">
-
-        {/* Header */}
         <header className="employee-header">
-
           <div>
             <h1>Employee Dashboard</h1>
             <p>Manage and track your assigned complaints.</p>
           </div>
 
           <div className="header-user">
-            <div className="header-avatar">E</div>
-
+            <div className="header-avatar">
+              {(user?.name || "E").charAt(0).toUpperCase()}
+            </div>
             <div>
-              <strong>Employee</strong>
-              <span>Employee</span>
+              <strong>{user?.name || "Employee"}</strong>
+              <span>{user?.role || "EMPLOYEE"}</span>
             </div>
           </div>
-
         </header>
 
-        {/* Welcome Card */}
         <section className="welcome-card">
-
           <div>
-            <h2>Welcome back, Employee!</h2>
-
+            <h2>Welcome back, {user?.name || "Employee"}!</h2>
             <p>
-              Here is an overview of your assigned municipal complaints.
+              Here is the latest overview of your assigned municipal
+              complaints.
             </p>
           </div>
-
-          <div className="welcome-icon">
-            🏢
-          </div>
-
+          <div className="welcome-icon">🏢</div>
         </section>
 
-        {/* Statistics */}
-        <section className="employee-stats">
+        {error && <div className="update-error">{error}</div>}
 
+        <section className="employee-stats">
           <div className="stat-card">
             <div className="stat-icon">📋</div>
-
             <div>
               <span>Total Assigned</span>
-              <h2>12</h2>
+              <h2>{complaints.length}</h2>
             </div>
           </div>
 
           <div className="stat-card">
             <div className="stat-icon">⏳</div>
-
             <div>
               <span>Pending</span>
-              <h2>05</h2>
+              <h2>{pendingCount}</h2>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">🔄</div>
-
+            <div className="stat-icon">🔧</div>
             <div>
               <span>In Progress</span>
-              <h2>03</h2>
+              <h2>{inProgressCount}</h2>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">✓</div>
-
+            <div className="stat-icon">✅</div>
             <div>
               <span>Resolved</span>
-              <h2>04</h2>
+              <h2>{resolvedCount}</h2>
             </div>
           </div>
-
         </section>
 
-        {/* Recent Complaints */}
         <section className="complaints-section">
-
           <div className="section-header">
-
             <div>
               <h2>Recent Assigned Complaints</h2>
-
-              <p>
-                Complaints currently assigned to you
-              </p>
+              <p>Complaints currently assigned to you.</p>
             </div>
-
-            <a href="/employee/complaints">
-              View All
-            </a>
-
+            <Link to="/employee/complaints">View All</Link>
           </div>
 
-          <div className="complaint-table">
-
-            <div className="table-header">
-              <span>Complaint ID</span>
-              <span>Category</span>
-              <span>Location</span>
-              <span>Status</span>
+          {recentComplaints.length === 0 ? (
+            <div className="no-complaints">
+              No complaints are currently assigned to you.
             </div>
+          ) : (
+            <div className="complaint-table">
+              <div className="table-header">
+                <span>Complaint ID</span>
+                <span>Category</span>
+                <span>Location</span>
+                <span>Status</span>
+              </div>
 
-            <div className="table-row">
-              <span>#CMP-1024</span>
-              <span>Road Damage</span>
-              <span>Pune</span>
-
-              <span className="status pending">
-                Pending
-              </span>
+              {recentComplaints.map((complaint) => (
+                <div className="table-row" key={complaint.id}>
+                  <span>#{complaint.id}</span>
+                  <span>{complaint.category || complaint.title || "N/A"}</span>
+                  <span>{complaint.location || "N/A"}</span>
+                  <span className={`status ${getStatusClass(complaint.status)}`}>
+                    {(complaint.status || "UNKNOWN").replace("_", " ")}
+                  </span>
+                </div>
+              ))}
             </div>
-
-            <div className="table-row">
-              <span>#CMP-1023</span>
-              <span>Street Light</span>
-              <span>Kothrud</span>
-
-              <span className="status progress">
-                In Progress
-              </span>
-            </div>
-
-            <div className="table-row">
-              <span>#CMP-1021</span>
-              <span>Garbage</span>
-              <span>Shivajinagar</span>
-
-              <span className="status resolved">
-                Resolved
-              </span>
-            </div>
-
-          </div>
-
+          )}
         </section>
-
       </main>
-
     </div>
   );
 }
