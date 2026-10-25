@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./citizen.css";
@@ -16,7 +15,6 @@ function CreateComplaint() {
         description: ""
     });
 
-    const [attachment, setAttachment] = useState(null);
     const [message, setMessage] = useState("");
 
     const handleChange = (e) => {
@@ -71,6 +69,7 @@ function CreateComplaint() {
 	                    title: formData.title.trim(),
 	                    category: formData.category,
 	                    location: formData.location.trim(),
+                        landmark: formData.landmark,
 	                    description: formData.description.trim()
 	                })
 	            }
@@ -93,7 +92,6 @@ function CreateComplaint() {
 	                description: ""
 	            });
 
-	            setAttachment(null);
 	            e.target.reset();
 	        } else {
 	            setMessage(
@@ -281,24 +279,6 @@ function CreateComplaint() {
                                 rows="5"
                                 required
                             />
-                        </div>
-
-                        <div className="citizen-form-group">
-                            <label>Upload Supporting Image (Optional)</label>
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                    setAttachment(e.target.files[0] || null)
-                                }
-                            />
-
-                            <small style={{ color: "#8290a3" }}>
-                                {attachment
-                                    ? `Selected: ${attachment.name}`
-                                    : "You can attach an image to help explain the issue."}
-                            </small>
                         </div>
 
                         <div style={{

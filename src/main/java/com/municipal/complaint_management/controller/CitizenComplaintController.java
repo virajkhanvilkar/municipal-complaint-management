@@ -1,4 +1,3 @@
-
 package com.municipal.complaint_management.controller;
 
 import java.time.LocalDateTime;
@@ -82,6 +81,7 @@ public class CitizenComplaintController {
             Object categoryValue = request.get("category");
             Object locationValue = request.get("location");
             Object descriptionValue = request.get("description");
+            Object landmarkValue = request.get("landmark");
 
             if (citizenIdValue == null
                     || titleValue == null
@@ -141,6 +141,7 @@ public class CitizenComplaintController {
             complaint.setCitizen(citizen);
             complaint.setCategory(category);
             complaint.setLocation(location);
+            complaint.setLandmark(landmarkValue == null ? null : landmarkValue.toString().trim());
             complaint.setDescription(description);
             complaint.setStatus("PENDING");
             complaint.setRemarks("");

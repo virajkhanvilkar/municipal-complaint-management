@@ -1,4 +1,3 @@
-
 package com.municipal.complaint_management.entity;
 
 import java.time.LocalDateTime;
@@ -37,6 +36,7 @@ public class Complaint {
     private String category;
 
     private String location;
+    private String landmark;
 
     @Column(length = 2000)
     private String description;
@@ -97,6 +97,13 @@ public class Complaint {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+    public String getLandmark() {
+        return landmark;
+    }
+
+    public void setLandmark(String landmark) {
+        this.landmark = landmark;
     }
 
     public String getDescription() {

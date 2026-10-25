@@ -138,41 +138,34 @@ function MyComplaints() {
 
     const filteredComplaints = complaints.filter((complaint) => {
 
-        const complaintId =
-            `CMP${String(complaint.id).padStart(3, "0")}`;
+        const complaintId = `CMP${String(complaint.id).padStart(3, "0")}`;
 
-        const description =
-            complaint.description || "";
+        const description = complaint.description || "";
 
-        const category =
-            complaint.category || "";
+        const category = complaint.category || "";
 
-        const location =
-            complaint.location || "";
+        const location = complaint.location || "";
 
-        const searchText =
-            search.toLowerCase();
+        const landmark = complaint.landmark || "";
+
+        const title = complaint.title || "";
+
+        const searchText = search.toLowerCase();
 
         const matchesSearch =
-            complaintId
-                .toLowerCase()
-                .includes(searchText) ||
+            complaintId.toLowerCase().includes(searchText) ||
 
-            description
-                .toLowerCase()
-                .includes(searchText) ||
+            description.toLowerCase().includes(searchText) ||
 
-            category
-                .toLowerCase()
-                .includes(searchText) ||
+            category.toLowerCase().includes(searchText) ||
 
-            location
-                .toLowerCase()
-                .includes(searchText);
+            location.toLowerCase().includes(searchText) ||
 
+            landmark.toLowerCase().includes(searchText) ||
 
-        const normalizedStatus =
-            complaint.status?.toUpperCase();
+            title.toLowerCase().includes(searchText);
+
+        const normalizedStatus = complaint.status?.toUpperCase();
 
         const matchesFilter =
             filter === "All" ||
@@ -534,7 +527,7 @@ function MyComplaints() {
 
                             <input
                                 type="text"
-                                placeholder="Search by ID, description, category or location..."
+                                placeholder="Search by ID, title, description, category, location or landmark..."
                                 value={search}
                                 onChange={(e) =>
                                     setSearch(e.target.value)
@@ -589,35 +582,28 @@ function MyComplaints() {
                             COMPLAINT TABLE
                         ================================================= */}
 
-                        <table className="citizen-table">
+                        <div className="complaints-table-wrapper">
+                            <table className="citizen-table complaints-table">
 
                             <thead>
 
                                 <tr>
 
-                                    <th>
-                                        Complaint ID
-                                    </th>
+                                    <th>Complaint ID</th>
 
-                                    <th>
-                                        Description
-                                    </th>
+                                    <th>Title</th>
 
-                                    <th>
-                                        Category
-                                    </th>
+                                    <th>Description</th>
 
-                                    <th>
-                                        Date
-                                    </th>
+                                    <th>Category</th>
 
-                                    <th>
-                                        Location
-                                    </th>
+                                    <th>Date</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>Location</th>
+
+                                    <th>Nearby Landmark</th>
+
+                                    <th>Status</th>
 
                                 </tr>
 
@@ -649,6 +635,8 @@ function MyComplaints() {
                                                     )}
 
                                                 </td>
+
+                                                <td>{complaint.title || "-"}</td>
 
 
                                                 {/* Description */}
@@ -691,6 +679,10 @@ function MyComplaints() {
 
                                                 </td>
 
+                                                <td>
+                                                    {complaint.landmark || "-"}
+                                                </td>
+
 
                                                 {/* Status */}
 
@@ -719,7 +711,7 @@ function MyComplaints() {
                                     <tr>
 
                                         <td
-                                            colSpan="6"
+                                            colSpan="8"
                                             style={{
                                                 textAlign: "center",
                                                 padding: "30px"
@@ -736,8 +728,8 @@ function MyComplaints() {
 
                             </tbody>
 
-                        </table>
-
+                            </table>
+                        </div>
 
                     </div>
 
