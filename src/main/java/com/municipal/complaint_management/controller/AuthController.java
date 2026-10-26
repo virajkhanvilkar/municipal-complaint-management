@@ -1,3 +1,4 @@
+
 package com.municipal.complaint_management.controller;
 
 import java.util.HashMap;
@@ -28,107 +29,53 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
-    // ================================
-    // REGISTER
-    // ================================
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
 
-        System.out.println("=================================");
-        System.out.println("REGISTER EMAIL: [" + user.getEmail() + "]");
-
-        // Check if email already exists
         Optional<User> existingUser =
-                userRepository.findByEmail(user.getEmail());
+                userRepository.findFirstByEmailOrderByIdAsc(user.getEmail());
 
         if (existingUser.isPresent()) {
-
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(Map.of(
-                            "message",
-                            "Email already registered"
-                    ));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Email already registered"));
         }
 
-        // Default role for new users
         user.setRole("CITIZEN");
-
-        // Save user into database
         User savedUser = userRepository.save(user);
 
-        System.out.println("USER REGISTERED: "
-                + savedUser.getEmail());
-
-        System.out.println("=================================");
-
         Map<String, Object> response = new HashMap<>();
-
         response.put("message", "Registration successful");
         response.put("id", savedUser.getId());
         response.put("name", savedUser.getName());
         response.put("email", savedUser.getEmail());
         response.put("role", savedUser.getRole());
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-    // ================================
-    // LOGIN
-    // ================================
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-        System.out.println("=================================");
-        System.out.println(
-                "LOGIN EMAIL RECEIVED: ["
-                + request.getEmail() + "]"
-        );
+        System.out.println("LOGIN EMAIL RECEIVED: [" + request.getEmail() + "]");
 
-        // Find user by email
         Optional<User> userOptional =
-                userRepository.findByEmail(request.getEmail());
+                userRepository.findFirstByEmailOrderByIdAsc(request.getEmail());
 
-        System.out.println(
-                "USER FOUND: "
-                + userOptional.isPresent()
-        );
+        System.out.println("USER FOUND: " + userOptional.isPresent());
 
-        // User does not exist
         if (userOptional.isEmpty()) {
-
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of(
-                            "message",
-                            "Invalid email or password"
-                    ));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Invalid email or password"));
         }
 
         User user = userOptional.get();
 
-        // Check password
-        if (!Objects.equals(
-                user.getPassword(),
-                request.getPassword())) {
-
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of(
-                            "message",
-                            "Invalid email or password"
-                    ));
+        if (!Objects.equals(user.getPassword(), request.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Invalid email or password"));
         }
 
-        // Login successful
         Map<String, Object> response = new HashMap<>();
-
         response.put("message", "Login successful");
         response.put("id", user.getId());
         response.put("name", user.getName());
@@ -137,9 +84,7 @@ public class AuthController {
 
         System.out.println("LOGIN SUCCESSFUL");
         System.out.println("USER ID: " + user.getId());
-        System.out.println("USER NAME: " + user.getName());
         System.out.println("USER ROLE: " + user.getRole());
-        System.out.println("=================================");
 
         return ResponseEntity.ok(response);
     }

@@ -394,3 +394,20 @@
     gap: 10px;
   }
 }
+.employee-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.employee-logout:hover {
+  opacity: 0.8;
+}

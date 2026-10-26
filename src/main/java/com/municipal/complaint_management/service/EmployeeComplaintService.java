@@ -1,3 +1,4 @@
+
 package com.municipal.complaint_management.service;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,11 @@ public class EmployeeComplaintService {
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        if (!"EMPLOYEE".equalsIgnoreCase(employee.getRole())) {
+            throw new IllegalArgumentException(
+                    "The specified user is not an employee");
+        }
+
         return complaintRepository.findByEmployee(employee);
     }
 
@@ -51,16 +57,32 @@ public class EmployeeComplaintService {
             String newStatus,
             String remarks) {
 
+        if (newStatus == null ||
+                !List.of("PENDING", "IN_PROGRESS", "RESOLVED")
+                        .contains(newStatus.trim().toUpperCase())) {
+
+            throw new IllegalArgumentException(
+                    "Invalid status. Allowed statuses: PENDING, IN_PROGRESS, RESOLVED");
+        }
+
+        newStatus = newStatus.trim().toUpperCase();
+
         Complaint complaint = complaintRepository.findById(complaintId)
                 .orElseThrow(() -> new RuntimeException("Complaint not found"));
 
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        if (!"EMPLOYEE".equalsIgnoreCase(employee.getRole())) {
+            throw new IllegalArgumentException(
+                    "The specified user is not an employee");
+        }
+
         if (complaint.getEmployee() == null ||
                 !complaint.getEmployee().getId().equals(employeeId)) {
 
-            throw new RuntimeException("Complaint is not assigned to this employee");
+            throw new IllegalArgumentException(
+                    "Complaint is not assigned to this employee");
         }
 
         String oldStatus = complaint.getStatus();
